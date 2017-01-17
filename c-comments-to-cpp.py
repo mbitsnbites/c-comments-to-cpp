@@ -33,6 +33,9 @@ comment_style = '//'
 comment_indent = 0
 
 for line in fileinput.input():
+    # Start by dropping trailing whitespace from the input.
+    line = line.rstrip()
+
     out_line = ''
     inside_string = False
     inside_indentation = True
@@ -59,16 +62,20 @@ for line in fileinput.input():
                                 k += 1
                             else:
                                 break
-                        if k < len(line) and not (line[k] in [' ', '\t']):
+                        if k < len(line) and not (line[k] in [' ', '\t', '*']):
                             out_line += ' '
-                if line[k] == '*' and (k + 1) < len(line) and line[k + 1] == '/':
-                    inside_c_comment = False
-                    start_or_end_line = True
-                    out_line += '\n'
-                    k += 2
-                else:
-                    out_line += line[k]
-                    k += 1
+                if k < len(line):
+                    if line[k] == '*' and (k + 1) < len(line) and line[k + 1] == '/':
+                        inside_c_comment = False
+                        start_or_end_line = True
+                        if k > 0 and line[k - 1] == '*':
+                            # Replace '*/' with '**' in case this is a '...*****/'-style line.
+                            out_line += '**'
+                        out_line += '\n'
+                        k += 2
+                    else:
+                        out_line += line[k]
+                        k += 1
             else:
                 if line[k] == '/' and (k + 1) < len(line) and line[k + 1] == '*':
                     # Start of C style comment.
@@ -78,13 +85,14 @@ for line in fileinput.input():
                     comment_style = '//'
                     k += 2
                     if k < len(line) and (line[k] == '*' or line[k] == '!'):
-                        # Start of Doxygen comment.
-                        comment_style = '///'
-                        k += 1
-                    if k < len(line) and line[k] == '<':
-                        # Start of Doxygen after-member comment.
-                        comment_style = '///<'
-                        k += 1
+                        if (k + 1) >= len(line) or line[k + 1] != '*':
+                            # Start of Doxygen comment.
+                            comment_style = '///'
+                            k += 1
+                            if k < len(line) and line[k] == '<':
+                                # Start of Doxygen after-member comment.
+                                comment_style = '///<'
+                                k += 1
                     out_line += comment_style
                     inside_indentation = False
                 elif line[k] == '/' and (k + 1) < len(line) and line[k + 1] == '/':
