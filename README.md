@@ -23,10 +23,8 @@ Then `cat test.cpp | c-comments-to-cpp.py` outputs:
 ```c++
   static int some_var;  // This is a static variable
 
-  ///
   /// @brief Some function.
   /// @param x The first argument.
-  ///
   void cool_fun(int x) {
     ...
   }
