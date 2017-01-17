@@ -36,6 +36,7 @@ for line in fileinput.input():
     out_line = ''
     inside_string = False
     inside_indentation = True
+    start_or_end_line = False
     k = 0
     while k < len(line):
         if inside_string:
@@ -62,6 +63,7 @@ for line in fileinput.input():
                             out_line += ' '
                 if line[k] == '*' and (k + 1) < len(line) and line[k + 1] == '/':
                     inside_c_comment = False
+                    start_or_end_line = True
                     out_line += '\n'
                     k += 2
                 else:
@@ -72,6 +74,7 @@ for line in fileinput.input():
                     # Start of C style comment.
                     comment_indent = k
                     inside_c_comment = True
+                    start_or_end_line = True
                     comment_style = '//'
                     k += 2
                     if k < len(line) and (line[k] == '*' or line[k] == '!'):
@@ -97,5 +100,7 @@ for line in fileinput.input():
     # Strip trailing whitespace (including newline chars).
     out_line = out_line.rstrip()
 
-    print '%s\n' % (out_line),
+    # Empty start/stop line?
+    if (not start_or_end_line) or len(out_line.lstrip()) != len(comment_style):
+        print '%s\n' % (out_line),
 
