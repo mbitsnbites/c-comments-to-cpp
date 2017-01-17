@@ -30,6 +30,7 @@ args = parser.parse_args()
 
 inside_c_comment = False
 comment_style = '//'
+comment_indent = 0
 
 for line in fileinput.input():
     out_line = ''
@@ -37,13 +38,6 @@ for line in fileinput.input():
     inside_indentation = True
     k = 0
     while k < len(line):
-        if inside_indentation and not (line[k] in [' ', '\t']):
-            inside_indentation = False
-            if inside_c_comment:
-                if line[k] == '*' and ((k + 1) == len(line) or line[k + 1] != '/'):
-                    k += 1
-                out_line += comment_style
-
         if inside_string:
             assert(k > 0)
             if line[k] == '"' and line[k - 1] != '\\':
@@ -52,6 +46,20 @@ for line in fileinput.input():
             k += 1
         else:
             if inside_c_comment:
+                if inside_indentation:
+                    if (k >= comment_indent) or not (line[k] in [' ', '\t']):
+                        inside_indentation = False
+                        out_line += comment_style
+                        # Consume up to len(comment_style) chars from the line.
+                        for m in xrange(k, min(k + len(comment_style), len(line))):
+                            if line[m] in [' ', '\t']:
+                                k += 1
+                            elif line[m] == '*' and ((m + 1) == len(line) or line[m + 1] != '/'):
+                                k += 1
+                            else:
+                                break
+                        if k < len(line) and not (line[k] in [' ', '\t']):
+                            out_line += ' '
                 if line[k] == '*' and (k + 1) < len(line) and line[k + 1] == '/':
                     inside_c_comment = False
                     out_line += '\n'
@@ -62,6 +70,7 @@ for line in fileinput.input():
             else:
                 if line[k] == '/' and (k + 1) < len(line) and line[k + 1] == '*':
                     # Start of C style comment.
+                    comment_indent = k
                     inside_c_comment = True
                     comment_style = '//'
                     k += 2
@@ -70,6 +79,7 @@ for line in fileinput.input():
                         comment_style = '///'
                         k += 1
                     out_line += comment_style
+                    inside_indentation = False
                 elif line[k] == '/' and (k + 1) < len(line) and line[k + 1] == '/':
                     # Start of C++ style comment.
                     out_line += line[k:]
