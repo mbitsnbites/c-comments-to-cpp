@@ -78,6 +78,10 @@ for line in fileinput.input():
                         # Start of Doxygen comment.
                         comment_style = '///'
                         k += 1
+                    if k < len(line) and line[k] == '<':
+                        # Start of Doxygen after-member comment.
+                        comment_style = '///<'
+                        k += 1
                     out_line += comment_style
                     inside_indentation = False
                 elif line[k] == '/' and (k + 1) < len(line) and line[k + 1] == '/':
