@@ -7,26 +7,42 @@ The program expects the source file on STDIN, and writes the result to STDOUT.
 For example, if this is `test.cpp`:
 
 ```c++
-  static int some_var;  /* This is a static variable */
+  /*****************************************************************************
+  * This is a big comment.
+  *****************************************************************************/
 
   /**
-  * @brief Some function.
-  * @param x The first argument.
+  * @brief Return value for all library functions.
   */
-  void cool_fun(int x) {
-    ...
+  typedef enum {
+    STATUS_FAIL = 0, /*!< Failure (zero). */
+    STATUS_OK = 1    /*!< Success
+                          (non-zero). */
+  } status_t;
+
+  void foo() {
+    /* Print a message. */
+    printf("Hello! \"/* This is not a comment! */\"\n"); /* ...but this is. */
   }
 ```
 
 Then `cat test.cpp | c-comments-to-cpp.py` outputs:
 
 ```c++
-  static int some_var;  // This is a static variable
+  //****************************************************************************
+  // This is a big comment.
+  //****************************************************************************
 
-  /// @brief Some function.
-  /// @param x The first argument.
-  void cool_fun(int x) {
-    ...
+  /// @brief Return value for all library functions.
+  typedef enum {
+    STATUS_FAIL = 0, ///< Failure (zero).
+    STATUS_OK = 1    ///< Success
+                     ///< (non-zero).
+  } status_t;
+
+  void foo() {
+    // Print a message.
+    printf("Hello! \"/* This is not a comment! */\"\n"); // ...but this is.
   }
 ```
 
