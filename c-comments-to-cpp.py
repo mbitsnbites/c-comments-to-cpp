@@ -32,11 +32,41 @@ inside_c_comment = False
 comment_style = '//'
 comment_indent = 0
 
+# Whether or not to include comments for start/end lines:
+# True:  /**      //
+#         *   =>  //
+#         */      //
+#
+# False: /**
+#         *   =>  //
+#         */
+comment_start_or_end_lines = False
+
+# Whether or not to add comment style to empty lines in comment blocks
+# True:  /**
+#         * One      // One
+#         *      =>  //
+#         * Two      // Two
+#         */
+#
+# False: /**
+#         * One      // One
+#         *      =>
+#         * Two      // Two
+#         */
+comment_empty_lines_in_comment_blocks = False
+
 for line in fileinput.input():
     # Start by dropping trailing whitespace from the input.
     line = line.rstrip()
-
     out_line = ''
+
+    # Cater for empty lines in the middle of comments
+    # which we want to be empty comment lines to make
+    # it a consistent block.
+    if comment_empty_lines_in_comment_blocks and len(line) == 0 and inside_c_comment:
+        out_line += comment_style
+
     inside_string = False
     inside_indentation = True
     start_or_end_line = False
@@ -84,6 +114,11 @@ for line in fileinput.input():
                     start_or_end_line = True
                     comment_style = '//'
                     k += 2
+                    if (k + 1) < len(line) and line[k] == '*' and line[k+1] == '/':
+                        # Ridiculous case of a completely empty, single line C-style comment
+                        inside_c_comment = False
+                        start_or_end_line = True
+                        break;
                     if k < len(line) and (line[k] == '*' or line[k] == '!'):
                         if (k + 1) >= len(line) or line[k + 1] != '*':
                             # Start of Doxygen comment.
@@ -108,7 +143,7 @@ for line in fileinput.input():
     # Strip trailing whitespace (including newline chars).
     out_line = out_line.rstrip()
 
-    # Empty start/stop line?
-    if (not start_or_end_line) or len(out_line.lstrip()) != len(comment_style):
+    # Print output if options and circumstances permit.
+    if (not start_or_end_line or comment_start_or_end_lines) and (len(out_line.lstrip()) != len(comment_style) or comment_empty_lines_in_comment_blocks):
         print '%s\n' % (out_line),
 
