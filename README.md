@@ -9,7 +9,7 @@ as command line options).
 You can also alter the behavior of the conversion by passing command line
 options.
 
-For mor information, run `c-comments-to-cpp.py --help`
+For more information, run `c-comments-to-cpp.py --help`
 
 For example, if this is `test.cpp`:
 
