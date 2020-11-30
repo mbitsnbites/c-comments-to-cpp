@@ -24,32 +24,7 @@ import argparse
 import sys
 
 
-# The effect of comment_start_or_end_lines:
-# True:  /**      //
-#         *   =>  //
-#         */      //
-#
-# False: /**
-#         *   =>  //
-#         */
-
-# The effect of comment_empty_lines_in_comment_blocks:
-# True:  /**
-#         * One      // One
-#         *      =>  //
-#         * Two      // Two
-#         */
-#
-# False: /**
-#         * One      // One
-#         *      =>
-#         * Two      // Two
-#         */
-
-
-def convert(
-    in_file, out_file, comment_start_or_end_lines, comment_empty_lines_in_comment_blocks
-):
+def convert(in_file, out_file, keep_empty_start_end, drop_empty_lines):
     inside_c_comment = False
     comment_style = "//"
     comment_indent = 0
@@ -62,11 +37,7 @@ def convert(
         # Cater for empty lines in the middle of comments
         # which we want to be empty comment lines to make
         # it a consistent block.
-        if (
-            comment_empty_lines_in_comment_blocks
-            and len(line) == 0
-            and inside_c_comment
-        ):
+        if (not drop_empty_lines) and len(line) == 0 and inside_c_comment:
             out_line += comment_style
 
         inside_string = False
@@ -156,9 +127,11 @@ def convert(
         out_line = out_line.rstrip()
 
         # Print output if options and circumstances permit.
-        if (not start_or_end_line or comment_start_or_end_lines) and (
-            len(out_line.lstrip()) != len(comment_style)
-            or comment_empty_lines_in_comment_blocks
+        empty_comment_line = len(out_line.lstrip()) == len(comment_style)
+        if (
+            (not empty_comment_line)
+            or (start_or_end_line and keep_empty_start_end)
+            or (not start_or_end_line and not drop_empty_lines)
         ):
             out_file.write(f"{out_line}\n")
 
@@ -169,14 +142,14 @@ def main():
         description="Convert C-style comments to C++-style."
     )
     parser.add_argument(
-        "--comment-start-or-end-lines",
+        "--keep-empty-start-end",
         action="store_true",
-        help="whether or not to include comments for start/end lines",
+        help="preserve empty start/end comment lines",
     )
     parser.add_argument(
-        "--comment-empty-lines-in-comment-blocks",
+        "--drop-empty-lines",
         action="store_true",
-        help="whether or not to add comment style to empty lines in comment blocks",
+        help="drop empty lines in comment blocks",
     )
     parser.add_argument("infile", nargs="?", help="input file (default: stdin)")
     parser.add_argument("outfile", nargs="?", help="output file (default: stdout)")
@@ -193,8 +166,8 @@ def main():
     convert(
         in_file=in_file,
         out_file=out_file,
-        comment_start_or_end_lines=args.comment_start_or_end_lines,
-        comment_empty_lines_in_comment_blocks=args.comment_empty_lines_in_comment_blocks,
+        keep_empty_start_end=args.keep_empty_start_end,
+        drop_empty_lines=args.drop_empty_lines,
     )
 
 
