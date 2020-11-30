@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- mode: Python; tab-width: 4; indent-tabs-mode: nil; -*-
 """
-  Copyright (C) 2017 Marcus Geelnard
+  Copyright (C) 2017-2020 Marcus Geelnard
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -85,7 +85,7 @@ for line in fileinput.input():
                         inside_indentation = False
                         out_line += comment_style
                         # Consume up to len(comment_style) chars from the line.
-                        for m in xrange(k, min(k + len(comment_style), len(line))):
+                        for m in range(k, min(k + len(comment_style), len(line))):
                             if line[m] in [' ', '\t']:
                                 k += 1
                             elif line[m] == '*' and ((m + 1) == len(line) or line[m + 1] != '/'):
@@ -145,5 +145,5 @@ for line in fileinput.input():
 
     # Print output if options and circumstances permit.
     if (not start_or_end_line or comment_start_or_end_lines) and (len(out_line.lstrip()) != len(comment_style) or comment_empty_lines_in_comment_blocks):
-        print '%s\n' % (out_line),
+        print('%s\n' % (out_line), end=' ')
 
