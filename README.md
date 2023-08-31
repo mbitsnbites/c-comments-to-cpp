@@ -1,3 +1,5 @@
+## ⚠️ This repository has moved to: https://gitlab.com/mbitsnbites/c-comments-to-cpp
+
 # C comments to C++
 
 This tool converts C style comments to C++ style comments.
